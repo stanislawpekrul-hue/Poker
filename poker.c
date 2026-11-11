@@ -176,25 +176,21 @@ int compare_hands(Hand h1, Hand h2) { // rostrzyganie remisów
 }
 int read_hand(Hand *hand) { // wczytywanie rąk
     Hand h;
-    int value;
-    int suit;
-    value = getchar();
-    if (value == EOF) {
+    char value;
+    char suit;
+    if (scanf(" %c%c", &value, &suit) != 2) {
         return 0;
     }
-    suit = getchar();
     h.Cards[0].value = char_to_value(value);
     h.Cards[0].suit = suit;
     for (int i = 1; i < 5; i++) {
-        value = getchar();
-        suit = getchar();
+        scanf(" %c%c", &value, &suit);
         h.Cards[i].value = char_to_value(value);
         h.Cards[i].suit = suit;
     }
-    getchar(); // czytamy przejście do nowej lini
     sort_hand(&h);
     *hand = h;
-    fix_ace_straight(hand); // sortujemy wczytaną rękę pokerową
+    fix_ace_straight(hand);
     return 1;
 }
 
