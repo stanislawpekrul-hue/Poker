@@ -16,8 +16,7 @@ A robust command-line tool written in C that evaluates, ranks, and compares Texa
 
 ---
 
-## Input Data Format
-
+## Input Data Formatm
 To make the program robust and easy to use, data entry ignores all whitespace (spaces, tabs, and newlines). 
 
 A single card is always represented by exactly **two characters**:
