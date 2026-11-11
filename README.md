@@ -26,5 +26,4 @@ A single card is always represented by exactly **two characters**:
 ## Compilation
 gcc poker.c -o poker
 
-AHKHQHJHTH
-2C3C4C5C6C
+AHKHQHJHT
