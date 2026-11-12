@@ -1,15 +1,14 @@
 #include <stdio.h>
-#include <stdlib.h>
 #include <stdbool.h>
 
 #define H 5 // liczba kart w ręce
 
-int greater(int a, int b) { // funckja przyjmująca wartość jeden, gdy a > b, wartość 2, gdy a < b i 0, gdy a = b
+int greater(int a, int b) { // funckja przyjmująca wartość 1, gdy a > b, wartość 2, gdy a < b i 0, gdy a = b
     if (a > b) return 1;
     else if (a < b) return 2;
     else return 0;
 }
-int char_to_value(int c) { // funckja zamieniająca wartość char na liczbę, odpowiadającą danej wartości karty
+int char_to_value(int c) { // funckja zamieniająca wartość char na liczbę od 2 do 14, odpowiadającą danej wartości karty
     if (c == 'A') return 14;
     if (c == 'K') return 13;
     if (c == 'Q') return 12;
@@ -25,7 +24,7 @@ typedef struct{ // struktura karty - wartość i kolor
 typedef struct{ // struktura ręki pokerowej - 5 kart
    Card Cards[5];
 } Hand;
-void sort_hand(Hand *h) { // procedura sortująca rękę pokerową ze względu na wartości kart
+void sort_hand(Hand *h) { // procedura sortująca rękę pokerową ze względu na wartości kart od największej do najmniejszej wartośći
     Card temp;
     for (int i = 5; i > 0; i--) {
         for (int j = 0; j < i - 1; j++) {
@@ -37,7 +36,9 @@ void sort_hand(Hand *h) { // procedura sortująca rękę pokerową ze względu n
         }
     }
 }
-bool is_same_suit(Hand h) { // sprawdzamy czy wszystkie karty w ręce są tego samego koloru
+// od tego miejsca wszystkie funckje działają na posortowanej ręce
+bool is_same_suit(Hand h) { /* funkcja sprawdzająca, czy wszystkie karty w ręce są tego samego koloru,
+    przyjmuje true, gdy tak jest i false w przeciwnym wypadku */
     int color = h.Cards[0].suit;
     bool result = true;
     int i = 1;
@@ -47,7 +48,8 @@ bool is_same_suit(Hand h) { // sprawdzamy czy wszystkie karty w ręce są tego s
     }
     return result;
 }
-void fix_ace_straight(Hand *h) {
+void fix_ace_straight(Hand *h) { /* funkcja zamieniająca wartość 14 na 1, jeśli układ to strit od 5,
+aby poprawnie roztrzygać remisy stritów oraz pokerów */
     if ((*h).Cards[0].value == 14 && (*h).Cards[1].value == 5 &&
         (*h).Cards[2].value == 4 && (*h).Cards[3].value == 3 &&
         (*h).Cards[4].value == 2) {
@@ -55,30 +57,23 @@ void fix_ace_straight(Hand *h) {
         sort_hand(h);
         }
 }
-bool is_sequence(Hand h) { // sprawdzamy czy wartości kart w ręce są kolejnymi liczbami (poker lub strit)
-    bool result = true;
+bool is_sequence(Hand h) { // funckja sprawdzająca, czy układ to poker lub strit, przyjmuje true, gdy tak jest i false w przeciwnym wypadku
     int i = 0;
+    int result = true;
     while (i < H - 1 && result == true) {
         result = (h.Cards[i].value == h.Cards[i + 1].value + 1);
         i++;
     }
-    i = 1;
-    bool five_to_A = (h.Cards[0].value == 14);
-    while (i < H && five_to_A == 1) {
-        five_to_A = (h.Cards[i].value == 6 - i);
-        i++;
-    }
-    if (five_to_A == true) result = true;
     return result;
 }
-int count_value(Hand h, int value) { // funkcja licząca, ile kart w ręce ma daną wartość
+int count_value(Hand h, int value) { // funkcja przekazująca liczbę różnych wartości kart w ręce
     int count = 0;
     for (int i = 0; i < H; i++) {
         if (h.Cards[i].value == value) count++;
     }
     return count;
 }
-int how_many(Hand h) { // funckja licząca liczbę różnych wartości w ręce pokerowej
+int how_many(Hand h) { // funckja zwracająca liczbę różnych wartości w ręce pokerowej
     int count = 0;
     int i = 0;
     while(i < H) {
@@ -87,7 +82,7 @@ int how_many(Hand h) { // funckja licząca liczbę różnych wartości w ręce p
     }
     return count;
 }
-int compare_one_by_one(Hand h1, Hand h2) { // funckja porównująca dwie ręce od najwyższej wartości
+int compare_one_by_one(Hand h1, Hand h2) { // funckja porównująca dwie ręce bezpośrednio od najwyższej wartości do najniższej
     int higher = 0;
     int i = 0;
     while (i < H && higher == 0) {
@@ -96,26 +91,27 @@ int compare_one_by_one(Hand h1, Hand h2) { // funckja porównująca dwie ręce o
     }
     return higher;
 }
-int get_rank(Hand h) { // funckja określająca najlepszy układ pokerowy z danej ręki, od 1 - wysoka karta do 9 - poker
+int get_rank(Hand h) { // funckja określająca układ pokerowy z danej ręki, od 1 - wysoka karta do 9 - poker
     bool same = is_same_suit(h);
     bool sequential = is_sequence(h);
-    if (how_many(h) == 5) {
-    if (same == true && sequential == true) return 9;
-    else if (same == true) return 6;
-    else if (sequential == true) return 5;
-    else return 1;
+    if (how_many(h) == H) {
+    if (same == true && sequential == true) return 9; // poker - kolejne wartości w tym samym kolorze
+    else if (same == true) return 6; // kolor - wszystkie karty w tym samym kolorze, ale nie poker
+    else if (sequential == true) return 5; // strit - kolejne wartości, ale nie poker
+    else return 1; // wysoka karta - różne wartość, ale nie poker, kolor lub strit
     }
-    if (how_many(h) == 4) return 2;
+    if (how_many(h) == 4) return 2; // para - cztery wartości oznaczają, że dokładnie jedna z nich powtarza się dokładnie dwa razy
     if (how_many(h)== 3) {
-        if (count_value(h, h.Cards[2].value) == 3) return 4;
-        else return 3;
+        if (count_value(h, h.Cards[2].value) == 3) return 4; // trójka - 3 wartości i środkowa występuje 3 razy
+        else return 3; // dwie pary - 3 wartości, ale środkowa nie występuje 3 razy
     }
     if (how_many(h) == 2) {
-        if (count_value(h, h.Cards[2].value) == 3) return 7;
-        else if (count_value(h, h.Cards[2].value) == 4) return 8;
+        if (count_value(h, h.Cards[2].value) == 3) return 7; // ful - dwie wartości i środkowa występuje 3 razy
+        else if (count_value(h, h.Cards[2].value) == 4) return 8; // kareta - dwie wartości i środkowa występuje 4 razy
     }
     return 0;
-}int double_value(Hand h) { // funckja zwracająca wartość, która występuje dokładnie dwa razy w ręce, jeśli istnieje dokładnie jedna taka wartość w ręce
+}int double_value(Hand h) { /* funckja zwracająca wartość, która występuje dokładnie dwa razy w ręce,
+     jeśli istnieje dokładnie jedna taka wartość w ręce */
     int result = 0;
     int i = 0;
     if (how_many(h) == 4) {
@@ -127,54 +123,60 @@ int get_rank(Hand h) { // funckja określająca najlepszy układ pokerowy z dane
     }
     else return 0;
 }
-int compare_hands(Hand h1, Hand h2) { // rostrzyganie remisów
+int compare_hands(Hand h1, Hand h2) { // funkcja służąca do rostryzgania remisów
     int common_rank;
     int result = greater(get_rank(h1), get_rank(h2));
     if (result == 0) {
+            int one_by_one = compare_one_by_one(h1, h2);
             common_rank = get_rank(h1);
             switch (common_rank){
-                case 9: result = compare_one_by_one(h1, h2);
+                case 9: result = compare_one_by_one(h1, h2); // poker - wystarczy sprawdzić po kolei
                         break;
-                case 8: result = greater(h1.Cards[2].value, h2.Cards[2].value);
+                case 8: result = greater(h1.Cards[2].value, h2.Cards[2].value); /* kareta - wartość występująca 4 razy na pewno
+                jest na drugiej pozycji, jeśli te wartości są równe to sprawdzamy po kolei */
                         if (result == 0) {
-                            if (h1.Cards[0].value == h2.Cards[0].value) result = greater(h1.Cards[4].value, h2.Cards[4].value);
-                            else result = greater(h1.Cards[0].value, h2.Cards[0].value);
+                            result = one_by_one;
                         }
                         break;
-                case 7: result = greater(h1.Cards[2].value, h2.Cards[2].value);
+                case 7: result = greater(h1.Cards[2].value, h2.Cards[2].value); // ful - analogicznie, jak dla karety
                         if (result == 0) {
-                            if (h1.Cards[0].value == h2.Cards[0].value) result = greater(h1.Cards[4].value, h2.Cards[4].value);
-                            else result = greater(h1.Cards[0].value, h2.Cards[0].value);
+                            result = one_by_one;
                         }
                         break;
-                case 6: result = compare_one_by_one(h1, h2);
+                case 6: result = one_by_one; // kolor - wystarczy sprawdzić po kolei
                         break;
-                case 5: result = compare_one_by_one(h1, h2);
+                case 5: result = one_by_one; // strit - wystarczy sprawdzić po kolei
                         break;
-                case 4: result = greater(h1.Cards[2].value, h2.Cards[2].value);
-                        if (h1.Cards[4].value == h2.Cards[0].value) result = 1;
-                        else if (h2.Cards[4].value == h1.Cards[0].value) result = 2;
-                        else {
-                                result = compare_one_by_one(h1, h2);
+                case 4: result = greater(h1.Cards[2].value, h2.Cards[2].value); /* trójka - wartość występująca 3 razy na pewno jest
+                na drugim miejscu, jeśli te wartości są równe sprawdzamy po kolei */
+                        if (result == 0) {
+                            result = one_by_one;
                         }
                         break;
-                case 3: result = greater(h1.Cards[1].value, h2.Cards[1].value);
+                case 3: result = greater(h1.Cards[1].value, h2.Cards[1].value); /* dwie pary - wartość większej pary na pewno jest
+                na pierwszej pozycji, zaś wartość drugiej pary na trzeciej, jeśli te wartości są równe dla dwóch rąk to
+                sprawdzamy po kolei */
                         if (result == 0) {
                                 result = greater(h1.Cards[3].value, h2.Cards[3].value);
-                                if (result == 0) result = compare_one_by_one(h1, h2);
+                                if (result == 0) {
+                                    result = one_by_one;
+                                }
                         }
                         break;
-                case 2: result = greater(double_value(h1), double_value(h2));
-                        if (result == 0) result = compare_one_by_one(h1, h2);
+                case 2: result = greater(double_value(h1), double_value(h2)); /* para - znajdujemy wartość występującą dwa razy,
+                jeśli są one równe to sprawdzamy po kolei */
+                        if (result == 0) {
+                                result = one_by_one;
+                        }
                         break;
-                case 1: result = compare_one_by_one(h1, h2);
+                case 1: result = one_by_one; // wysoka karta - sprawdzamy po kolei
                         break;
                 default: result = -1;
             }
     }
     return result;
 }
-int read_hand(Hand *hand) { // wczytywanie rąk
+int read_hand(Hand *hand) { // wczytywanie rąk pod podany adres, ignorujemy białe znaki
     Hand h;
     char value;
     char suit;
@@ -183,7 +185,7 @@ int read_hand(Hand *hand) { // wczytywanie rąk
     }
     h.Cards[0].value = char_to_value(value);
     h.Cards[0].suit = suit;
-    for (int i = 1; i < 5; i++) {
+    for (int i = 1; i < H; i++) {
         scanf(" %c%c", &value, &suit);
         h.Cards[i].value = char_to_value(value);
         h.Cards[i].suit = suit;
@@ -199,7 +201,7 @@ int main(){
    Hand best_hand;
    int current_row = 1;
    int best_row = 0;
-   bool is_tie = false;
+   bool is_tie = false; // zmienna określająca, czy mamy dwa maksymalnie silne układy
    while (read_hand(&current_hand) == 1) {
         if (current_row == 1) {
             best_hand = current_hand;
@@ -209,17 +211,17 @@ int main(){
             if (compare_hands(current_hand, best_hand) == 1) {
                 best_hand = current_hand;
                 best_row = current_row;
-		is_tie = false;
+		is_tie = false; // ignorujemy remis układów, które nie są najsilniejsze
             }
             else if (compare_hands(current_hand, best_hand) == 0) {
-                is_tie = true;
+                is_tie = true; // dwa układy są równe
                 best_row = 0;
             }
         }
         current_row++;
    }
 
-    if (is_tie == false) printf("%d\n", best_row);
+    if (is_tie == false) printf("%d\n", best_row); // jeśli nie ma remisu najsilniejszych układów, wypisujemy wiersz najsilniejszego układu
     else printf("%d\n", 0);
     return 0;
 }
